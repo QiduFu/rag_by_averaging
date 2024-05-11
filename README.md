@@ -1,5 +1,5 @@
 # Improving RAG by Averaging
-This repository contains a capstone project for the [Erdős Institute Data Science Boot Camp](https://www.erdosinstitute.org/). The data used in this notebook is provided by Jason Morgan at AwareHQ.
+This repository contains a capstone project for the [Erdős Institute Data Science Boot Camp](https://www.erdosinstitute.org/). The data used in this notebook is provided by Jason Morgan at [AwareHQ](https://www.awarehq.com/).
 
 **Presentation slides**: [slides.pdf](https://github.com/gycheong/rag_by_averaging/blob/main/slides.pdf)
 
@@ -40,16 +40,16 @@ Prior to feeding the text data into SBERT for vectorization, we
 ﬁrst took some steps to clean the data to improve the quality of 
 the vectorization and retrieved comments. This included:
 * Removing  missing  text  data,  including  deleted  and  removed
-comments.
-* Removing  short  and  long  words.
+comments
+* Removing  short  and  long  words
 * Stemming  and  lemmatizing  words  using  NLTK 
 WordNetLemmatizer
 * Removing  emoticons  and  emojis
-* Spelling  out  common  chat  abbreviations  (e.g.   afaik  →  As  far 
+* Spelling  out  common  chat  abbreviations  (e.g.,   afaik  →  As  far 
 as  I  know)
 
 We  deleted  only  4000  comments  (roughly  4%)  in  our  100k  sample
-database.
+database
 
 ## Naive RAG vs Averaging RAG
 
@@ -62,11 +62,11 @@ database.
 
 SBERT (Sentence Bert) is based on [BERT (Bidirectional Encoder Representations from Transformer)](https://arxiv.org/abs/1810.04805) developed by Google. From inspection, there are clear benefits of using SBERT over BERT for our purpose.
 
-1. BERT is designed to generate vectors that correspond to individual words (or more precisely, *subwords*) to a sentence, so each sentence is converted into not just a vector but a sequence of vectors. Hence, in order to examine the similaritiy of two sentences, we need to either pick one word or take the average of the vectors, which did not yield satisfying results.
+1. BERT is designed to generate vectors that correspond to individual words (or more precisely, *subwords*) from a given a sentence, so each sentence is converted into not just a vector but a sequence of vectors. Hence, in order to examine the similaritiy of two sentences, we need to either pick one word or take the average of the vectors, which did not yield satisfying results.
 
 2. Because BERT converts every subword as a vector, in order to fully use it, we need to use a lot more storage. In an experiement, examining 10400 comments required 11.8GB with BERT while it only required 91.6MB with SBERT.
 
-3. For BERT, the query and the comments (i.e., information to answer the query) need to be proceeded together when we embedd them as (sequences of) vectors. For SBERT, we can vectorize the comments first and then indepedently vectorize the query later.
+3. For BERT, the query and the comments (i.e., information to answer the query) need to be proceeded together when we embed them as (sequences of) vectors. For SBERT, we can vectorize the comments first and then indepedently vectorize the query later.
 
 ## Query and LLM generate responses from top 5 comments
 * Query: **How many PTOs does a regular employee have a year?**
@@ -77,15 +77,15 @@ SBERT (Sentence Bert) is based on [BERT (Bidirectional Encoder Representations f
 
 ## Evaluation of retrieval
 
-Note that it is rather difficult to say which LLM responses are better. Moreover, we note that our goal is NOT to get the answer that is absolutely correct but a relevant one among the reddit comments that we put in. For example, the answer may change over time, unless we update the input comments.
+Note that it is rather difficult to say which LLM responses are better. Moreover, we note that our goal is NOT to get the answer that is absolutely correct but a relevant one among the reddit comments that we put in. For example, the "correct" answer may change over time, unless we update the input comments.
 
 Hence, we use use both of the LLM responses as ground truths and compare the top 50 retrievals from the two methods:
 * Method 1: Naive RAG using cosine similairties against the original query
-* Method 2: Not-so-naive RAG using average cosine similairties against multiple similar queries, including the original one
+* Method 2: Averaging RAG using average cosine similairties against multiple similar queries, including the original one
 
 ### Evaluation method 1: Cosine Precision
 
-Let $\boldsymbol{t}_1$ and $\boldsymbol{t}_2$ be the truth vectors. For each vector $\boldsymbol{v}$ from a batch, the cosine similarities $\cos(\boldsymbol{t}_1, \boldsymbol{v})$ and $\cos(\boldsymbol{t}_2, \boldsymbol{v})$ are in the interval $[-1, 1]$, but in all of our examples, we know they are in $[0, 1]$. We simply take the average of the two to measure how truthful $\boldsymbol{v}$ is. Note that the closer the average is to $1$, the more truthful $\boldsymbol{v}$ is.
+Let $\boldsymbol{t}_1$ and $\boldsymbol{t}_2$ be the truth vectors generated by LLM from two different methods (which we call "batches") above. For each vector $\boldsymbol{v}$ from a batch, the cosine similarities $\cos(\boldsymbol{t}_1, \boldsymbol{v})$ and $\cos(\boldsymbol{t}_2, \boldsymbol{v})$ are in the interval $[-1, 1]$, but in all of our examples, we know they are in $[0, 1]$. We simply take the average of the two to measure how truthful $\boldsymbol{v}$ is. Note that the closer the average is to $1$, the more truthful $\boldsymbol{v}$ is.
 
 Recall the definition of **precision**:
 $$\mathrm{Precision} := \frac{\mathrm{Relevant \ retrieved \ instances}}{\mathrm{All \ retrieved \ instances}}.$$
